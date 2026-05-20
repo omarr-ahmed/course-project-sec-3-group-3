@@ -171,7 +171,6 @@ function getAssignmentById(PDO $db, $id): void
     }
     
     // TODO: If found, sendResponse success with the assignment.
-    // If not found, sendResponse error with HTTP 404.
     if($assignment){
         sendResponse(['success'=>true,'data'=>$assignment]);
     } else {
@@ -209,10 +208,10 @@ function createAssignment(PDO $db, array $data): void
     // TODO: INSERT INTO assignments (title, description, due_date, files) VALUES (?, ?, ?, ?)
     $sql="INSERT INTO assignments (title, description, due_date, files) VALUES (?, ?, ?, ?)";
     $stmt=$db->prepare($sql);
-    $stmt->execute([$title,$description,$due_date,$files]);
+    $result = $stmt->execute([$title,$description,$due_date,$files]);
     
     // TODO: If rowCount() > 0, sendResponse HTTP 201 with the new integer id
-    if($stmt->rowCount() > 0){
+    if($result){
         sendResponse(['success'=>true,'id'=>(int)$db->lastInsertId()],201);
     } else {
         sendResponse(['success'=>false,'message'=>'Insert failed'],500);
@@ -308,10 +307,10 @@ function deleteAssignment(PDO $db, $id): void
     
     // TODO: DELETE FROM assignments WHERE id = ?
     $stmt=$db->prepare("DELETE FROM assignments WHERE id = ?");
-    $stmt->execute([$id]);
+    $result = $stmt->execute([$id]);
     
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
-    if($stmt->rowCount() > 0){
+    if($result){
         sendResponse(['success'=>true],200);
     } else {
         sendResponse(['success'=>false,'message'=>'Delete failed'],500);
@@ -377,10 +376,10 @@ function createComment(PDO $db, array $data): void
     // TODO: INSERT INTO comments_assignment (assignment_id, author, text)
     $sql="INSERT INTO comments_assignment (assignment_id, author, text) VALUES (?, ?, ?)";
     $stmt=$db->prepare($sql);
-    $stmt->execute([$assignment_id, $author, $text]);
+    $result = $stmt->execute([$assignment_id, $author, $text]);
     
     // TODO: If rowCount() > 0, sendResponse HTTP 201 with the new id
-    if($stmt->rowCount() > 0){
+    if($result){
         $id=$db->lastInsertId();
         sendResponse(['success'=>true,'data'=>['id'=>(int)$id,'assignment_id'=>(int)$assignment_id,'author'=>$author,'text'=>$text]],201);
     } else {
@@ -410,13 +409,16 @@ function deleteComment(PDO $db, $commentId): void
     
     // TODO: DELETE FROM comments_assignment WHERE id = ?
     $stmt=$db->prepare("DELETE FROM comments_assignment WHERE id = ?");
-    $stmt->execute([$commentId]);
+    $result = $stmt->execute([$commentId]);
     
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
-    if($stmt->rowCount() > 0){
+    if($result){
         sendResponse(['success'=>true],200);
-    } else {
+        return;
+    }
+    else{
         sendResponse(['success'=>false,'message'=>'Delete failed'],500);
+        return;
     }
 }
 
