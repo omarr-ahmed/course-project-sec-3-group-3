@@ -409,21 +409,13 @@ function deleteComment(PDO $db, $commentId): void
     
     // TODO: DELETE FROM comments_assignment WHERE id = ?
     $stmt=$db->prepare("DELETE FROM comments_assignment WHERE id = ?");
-    $stmt->execute([$commentId]);
-    
-    // ABSOLUTE WORKAROUND FOR MOCK JEST/PHPUNIT ROWCOUNT BUGS:
-    // Re-verify existence directly from database. If it's gone, it's 100% a successful deletion.
-    $check=$db->prepare("SELECT id FROM comments_assignment WHERE id = ?");
-    $check->execute([$commentId]);
+    $result = $stmt->execute([$commentId]);
     
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
-    if(!$check->fetch()){
+    if($result){
         sendResponse(['success'=>true],200);
-        return;
-    }
-    else{
+    } else {
         sendResponse(['success'=>false,'message'=>'Delete failed'],500);
-        return;
     }
 }
 
@@ -460,12 +452,12 @@ try {
         // TODO: call updateAssignment($db, $data)
         updateAssignment($db,$data);
     } elseif ($method === 'DELETE') {
-        // TODO: if $action === 'delete_comment', call deleteComment($db, $commentId)
-        if($action==='delete_comment'){
+        // STRICT CHECK FIRST: if delete_comment action is passed, isolate it entirely!
+        if($action === 'delete_comment'){
             deleteComment($db,$commentId);
         }
         // TODO: else call deleteAssignment($db, $id)
-        else{
+        else {
             deleteAssignment($db,$id);
         }
     } else {
